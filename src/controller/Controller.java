@@ -24,6 +24,7 @@ public class Controller implements ActionListener, KeyListener {
     private Thread ScoreThread;
     private Game sl;
     private boolean isGameRunning = true;
+    private boolean pause = true;
 
     private boolean isEat = false;
     private Point food;
@@ -31,15 +32,12 @@ public class Controller implements ActionListener, KeyListener {
     public Controller() {
         sl = new Game(Persistent.read("src/resources/config.txt"), Persistent.readPlayers("src/resources/players.dat"));
         startGame = new StartGame(this, this, sl.getPlayerList(), getDatas());
-        isGameRunning = true;
-        inicio();
 
     }
 
- 
-
     private void inicio() {
         isGameRunning = true;
+        pause = true;
         snakeThread = new Thread(() -> {
             while (isGameRunning) {
                 if (isEat) {
@@ -49,7 +47,6 @@ public class Controller implements ActionListener, KeyListener {
                 moveSnake();
                 sl.checkCollisionWithWalls(1248, 640);
                 checkCollisions();
-
                 startGame.getGame().repaint();
                 try {
                     Thread.sleep(sl.getLevel((String) startGame.getComboLevel().getSelectedItem()).getSpeed());
@@ -58,7 +55,6 @@ public class Controller implements ActionListener, KeyListener {
                 }
             }
         });
-
         foodThread = new Thread(() -> {
             while (isGameRunning) {
                 sl.generatedFood();
@@ -79,7 +75,7 @@ public class Controller implements ActionListener, KeyListener {
                 try {
                     Thread.sleep(sl.getLevel((String) startGame.getComboLevel().getSelectedItem()).getBoom());
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    break;
                 }
             }
         });
@@ -97,14 +93,14 @@ public class Controller implements ActionListener, KeyListener {
         ScoreThread.start();
 
     }
+
     public void reiniciarJuego() {
-    isGameRunning = false;
+        isGameRunning = false;
 
-    sl = new Game(Persistent.read("src/resources/config.txt"), Persistent.readPlayers("src/resources/players.dat"));
-    startGame.getGame().getPanelGame().reset(this);  
-
-    inicio();
-}
+        sl = new Game(Persistent.read("src/resources/config.txt"), Persistent.readPlayers("src/resources/players.dat"));
+        startGame.getGame().getPanelGame().reset(this);
+inicio();
+    }
 
     private void moveSnake() {
         addScore();
@@ -113,7 +109,7 @@ public class Controller implements ActionListener, KeyListener {
     }
 
     private void checkCollisions() {
-        if (sl.checkCollisionWithBody()) {
+        if ( (sl.checkCollisionWithBoom())) {
             startGame.getDialogGameOver().openCloseWindow(true);
             startGame.getDialogGameOver().setLblScore(sl.getScore().getScore());
             sl.getSnake().setDownDirection(false);
@@ -123,7 +119,8 @@ public class Controller implements ActionListener, KeyListener {
             gameOver();
         }
     }
-       public void gameOver() {
+
+    public void gameOver() {
         isGameRunning = false;
     }
 
@@ -181,7 +178,7 @@ public class Controller implements ActionListener, KeyListener {
                 } else {
                     startGame.showmessage("La puntuación no supera el récord actual para " + name);
                 }
-                return; // Sale del bucle si encuentra al jugador
+                return;
             }
         }
 
@@ -205,7 +202,6 @@ public class Controller implements ActionListener, KeyListener {
                 startGame.getGame().openCloseWindow(true);
                 startGame.setVisible(false);
                 reiniciarJuego();
-                inicio();
                 break;
             case "Guardar":
                 updatePlayerScore();
@@ -227,6 +223,9 @@ public class Controller implements ActionListener, KeyListener {
                 break;
             case "play":
                 startGame.getDialogPause().openPause(false);
+                this.pause = true;
+                System.out.println("pause btn: " + pause);
+                
                 break;
             case "reiniciar":
                 reiniciarJuego();
@@ -234,6 +233,7 @@ public class Controller implements ActionListener, KeyListener {
                 break;
             case "home":
                 startGame.getGame().openCloseWindow(false);
+                startGame.getDialogPause().openPause(false);
                 gameOver();
                 startGame.setVisible(true);
 
@@ -267,7 +267,12 @@ public class Controller implements ActionListener, KeyListener {
             sl.getSnake().setUpDirection(false);
             sl.getSnake().setRightDirection(true);
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            startGame.getDialogPause().openPause(true);
+            pause = !pause;
+
+            if (pause) {
+                startGame.getDialogPause().openPause(true);
+                snakeThread.interrupt();
+            }
             sl.getSnake().setDownDirection(false);
             sl.getSnake().setUpDirection(false);
             sl.getSnake().setRightDirection(false);
@@ -277,7 +282,8 @@ public class Controller implements ActionListener, KeyListener {
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(KeyEvent e
+    ) {
     }
 
     public static void main(String[] args) {

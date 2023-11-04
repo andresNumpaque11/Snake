@@ -9,7 +9,7 @@ import java.util.Random;
  *
  * @author USER
  */
-public class Game implements Serializable{
+public class Game implements Serializable {
 
     private Snake snake;
     private Food food;
@@ -21,7 +21,7 @@ public class Game implements Serializable{
     private ArrayList<Level> levels;
     private ArrayList<Player> playerList;
 
-    public Game(ArrayList<Level> levels,ArrayList<Player> players ) {
+    public Game(ArrayList<Level> levels, ArrayList<Player> players) {
         snake = new Snake();
         food = new Food();
         random = new Random();
@@ -33,8 +33,8 @@ public class Game implements Serializable{
         generatePosSnake();
         generatedObstacle();
     }
-    
-    public void addPlayers(Player player){
+
+    public void addPlayers(Player player) {
         playerList.add(player);
     }
 
@@ -97,19 +97,31 @@ public class Game implements Serializable{
 
     }
 
+    public boolean checkCollisionWithBoom() {
+        if ((snake.getPointList().get(0).equals(obstacle.getPosition()))) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
     public boolean checkCollisionWithBody() {
-            if ((snake.getPointList().get(0).equals(obstacle.getPosition()))) {
+        for (int i = 2; i < snake.getPointList().size(); i++) {
+
+            if ((snake.getPointList().get(0).equals(snake.getPointList().get(i)))) {
+                System.out.println("se choco con el cuerpo");
                 return true;
             } else {
                 return false;
             }
-        
+        }return false;
+
     }
-     public void sortUser() {
-    playerList.sort((t, t1) -> Integer.compare(t1.getScore(), t.getScore()));
-}
 
-
+    public void sortUser() {
+        playerList.sort((t, t1) -> Integer.compare(t1.getScore(), t.getScore()));
+    }
 
     public Food getFood() {
         return food;
@@ -153,6 +165,5 @@ public class Game implements Serializable{
     public ArrayList<Player> getPlayerList() {
         return playerList;
     }
-    
 
 }
